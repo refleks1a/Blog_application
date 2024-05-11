@@ -1,0 +1,3 @@
+CREATE DATABASE Chat_App_DB;
+CREATE USER 'admin'@'%' IDENTIFIED BY 'agshin2004';
+GRANT ALL PRIVILEGES ON Chat_App_DB.* TO 'admin'@'%';

@@ -1,0 +1,34 @@
+version: '3.9'
+
+services:
+  web:
+    build:
+      context: ./backend
+    ports:
+      - 80:80  
+    restart: always
+    depends_on:
+      - mysqlserver  
+    env_file:
+      - .env
+    environment:
+      - MYSQL_HOST_NAME=${MYSQL_HOST_NAME} 
+      - MYSQL_USER_NAME=${MYSQL_USER_NAME} 
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_NAME=${MYSQL_NAME}
+    
+
+  mysqlserver:
+    container_name: mysqlserver
+    build: ./mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      -  mysqlvol:/var/lib/mysql
+    env_file:
+      - .env  
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+
+volumes:
+    mysqlvol:
