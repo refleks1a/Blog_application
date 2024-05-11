@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 
 import models 
 import auth
+import posts
 from auth import get_current_user
 from database import engine, sessionLocal
 
@@ -34,6 +35,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(posts.router)
 
 models.Base.metadata.create_all(bind=engine)
 
