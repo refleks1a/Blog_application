@@ -5,32 +5,13 @@ from typing import Optional
 from pydantic.types import conint
 
 
-class PostBase(BaseModel):
-    content: str
-    
-
-
-class PostCreate(PostBase):
-    pass
-
-
 class UserOut(BaseModel):
     id: int
     username: str
 
-
-class Post(PostBase):
-    id: int
-    owner: UserOut
-    likes: int
-    created_at: datetime
-    
-    class Config:
-        orm_mode = True
-
-
-class PostOut(BaseModel):
-    Post: Post
+class CreateUserRequest (BaseModel):
+    username: str
+    id: int 
 
 
 class UserCreate(BaseModel):
@@ -50,3 +31,42 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     id: Optional[str] = None
+
+
+class PostBase(BaseModel):
+    content: str
+    
+
+class PostCreate(PostBase):
+    pass
+   
+
+class Post(PostBase):
+    id: int
+    owner: UserOut
+    likes: int
+    created_at: datetime
+    
+    class Config:
+        orm_mode = True
+
+
+class PostOut(BaseModel):
+    Post: Post
+
+
+class CommentBase(BaseModel):
+    content: str
+
+
+class Comment(CommentBase):
+    id: int
+    post: int
+    owner: int
+    likes: int
+    author_like: bool
+    created_at: datetime
+
+
+class CommentCreate(CommentBase):
+    pass

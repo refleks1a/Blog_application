@@ -1,7 +1,7 @@
 from datetime import timedelta, datetime, timezone
 from typing import Annotated, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -36,13 +36,9 @@ def get_db():
 
 db_dependency = Annotated[Session, Depends(get_db)]
 
-class CreateUserRequest (BaseModel):
-    username: str
-    id: int
-
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
-def create_posts(post: schemas.PostCreate, db: Session = Depends(get_db), current_user: CreateUserRequest = Depends(auth.get_current_user)):
+def create_posts(post: schemas.PostCreate, db: Session = Depends(get_db), current_user: schemas.CreateUserRequest = Depends(auth.get_current_user)):
 
     new_post = Post(owner_id=current_user["id"], **post.dict())
     db.add(new_post)
@@ -72,3 +68,47 @@ def get_post(id: int, db: Session = Depends(get_db), current_user: int = Depends
                             detail=f"post with id: {id} was not found")
 
     return post  
+
+
+@router.put("/{id}", response_model=schemas.Post)
+def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends(get_db), current_user: int = Depends(auth.get_current_user)):
+
+    post_query = db.query(Post).filter(Post.id == id)
+
+    post = post_query.first()
+
+    if post == None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"post with id: {id} does not exist")
+
+    if post.owner_id != current_user["id"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Not authorized to perform requested action")
+
+    post_query.update(updated_post.dict(), synchronize_session=False)
+
+    db.commit()
+
+    return post_query.first()
+
+
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_post(id: int, db: Session = Depends(get_db), current_user: int = Depends(auth.get_current_user)):
+
+    post_query = db.query(Post).filter(Post.id == id)
+
+    post = post_query.first()
+
+    if post == None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"post with id: {id} does not exist")
+
+    if post.owner_id != current_user["id"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Not authorized to perform requested action")
+
+    post_query.delete(synchronize_session=False)
+    db.commit()
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
