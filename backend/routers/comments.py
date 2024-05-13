@@ -13,7 +13,7 @@ import database
 import models
 
 from database import sessionLocal 
-from models import User, Post, PostComment
+from models import User, Post, PostComment, CommentLike
 
 import schemas
 from routers import auth
@@ -115,3 +115,64 @@ def delete_comment(id: int, db: Session = Depends(get_db), current_user: int = D
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+@router.post("/{id}/like", status_code=status.HTTP_201_CREATED, response_model=schemas.CommentLike)
+def create_like(id: int, db: Session = Depends(get_db),
+        current_user: schemas.CreateUserRequest = Depends(auth.get_current_user)):
+    # The comment that being liked
+    liked_comment = db.query(PostComment).filter(PostComment.id == id).first()
+
+    if liked_comment == None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"The comment with id: {id} does not exist")
+    
+    # Check wether like object already exists
+    like_query = db.query(CommentLike).group_by(CommentLike.id).filter(
+        CommentLike.owner == current_user["id"], CommentLike.comment == id).first()
+
+    if like_query is not None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"You cannot like one comment twice")
+
+    # Create like object
+    new_like = CommentLike(owner=current_user["id"], comment=id)
+    # Increment the number of likes on the post
+    liked_comment.likes += 1
+    
+    db.add(new_like)
+    db.commit()
+    db.refresh(new_like)
+
+    return new_like
+
+
+@router.delete("/{id}/like", status_code=status.HTTP_204_NO_CONTENT)
+def delete_like(id: int, db: Session = Depends(get_db),
+        current_user: int = Depends(auth.get_current_user)):
+    
+    # The post where the like is being deleted
+    comment = db.query(PostComment).filter(PostComment.id == id).first()
+
+    if comment is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Comment with id: {id} does not exist")
+
+    if comment.owner != current_user["id"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Not authorized to perform requested action")
+    
+    like_query = db.query(CommentLike).filter(CommentLike.owner == current_user["id"],
+        CommentLike.comment == id)
+    like = like_query.first()
+    
+    # Check wether like object already exists
+    if like is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"like on comment with id: {id} does not exist")
+    
+    # Delete the like and decrement the number of likes on the post
+    like_query.delete(synchronize_session=False)
+    comment.likes -= 1
+
+    db.commit()
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

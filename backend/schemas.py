@@ -86,3 +86,17 @@ class PostLike(PostLikeBase):
 
 class PostLikeCreate(PostLikeBase):
     pass
+
+
+class CommentLikeBase(BaseModel):
+    comment: int
+
+
+class CommentLike(CommentLikeBase):
+    id: int
+    owner: int
+    created_at: datetime
+
+
+class CommentLikeCreate(CommentLikeBase):
+    pass
