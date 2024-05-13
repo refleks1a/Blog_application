@@ -16,10 +16,7 @@ import os
 from dotenv import load_dotenv
 
 import models 
-import auth
-import posts
-import comments
-from auth import get_current_user
+from routers import auth, posts, comments
 from database import engine, sessionLocal
 
 
@@ -56,7 +53,7 @@ def get_db():
 
 
 db_dependency = Annotated[Session, Depends(get_db)]
-user_dependency = Annotated[dict, Depends (get_current_user)]
+user_dependency = Annotated[dict, Depends (auth.get_current_user)]
 
 
 @app.post('/authenticate')

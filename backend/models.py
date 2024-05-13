@@ -62,3 +62,23 @@ class CommentOnComment(Base, Comment):
     __tablename__ = "comment_comments"
     
     comment = Column(Integer, ForeignKey("post_comments.id"), nullable = False)
+
+
+class Like():
+    id = Column(Integer, primary_key=True, index=True)
+    owner = Column(Integer, ForeignKey("users.id"), nullable = False)
+
+    created_at = Column(TIMESTAMP(timezone=True),
+                        nullable=False, server_default=text('now()'))
+
+
+class PostLike(Base, Like):
+    __tablename__ = "post_likes"
+
+    post = Column(Integer, ForeignKey("posts.id"), nullable = False)
+
+
+class CommentLike(Base, Like):
+    __tablename__ = "comment_likes"
+    
+    comment = Column(Integer, ForeignKey("post_comments.id"), nullable = False)

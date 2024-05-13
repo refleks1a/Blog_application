@@ -9,10 +9,14 @@ from starlette import status
 
 from pydantic import BaseModel
 
+import database
+import models
+
 from database import sessionLocal 
 from models import User, Post, PostComment
+
 import schemas
-import auth
+from routers import auth
 
 import os
 
@@ -91,7 +95,7 @@ def update_comment(id: int, updated_comment: schemas.CommentCreate, db: Session 
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int, db: Session = Depends(get_db), current_user: int = Depends(auth.get_current_user)):
+def delete_comment(id: int, db: Session = Depends(get_db), current_user: int = Depends(auth.get_current_user)):
 
     comment_query = db.query(PostComment).filter(PostComment.id == id)
 

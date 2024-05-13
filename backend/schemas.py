@@ -39,12 +39,14 @@ class PostBase(BaseModel):
 
 class PostCreate(PostBase):
     pass
-   
+
 
 class Post(PostBase):
     id: int
     owner: UserOut
     likes: int
+    reposts: int
+    saves: int
     created_at: datetime
     
     class Config:
@@ -69,4 +71,18 @@ class Comment(CommentBase):
 
 
 class CommentCreate(CommentBase):
+    pass
+
+
+class PostLikeBase(BaseModel):
+    post: int
+
+
+class PostLike(PostLikeBase):
+    id: int
+    owner: int
+    created_at: datetime
+
+
+class PostLikeCreate(PostLikeBase):
     pass
