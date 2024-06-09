@@ -54,3 +54,4 @@ fastapi-storages==0.3.0
 jmespath==1.0.1
 python-dateutil==2.9.0.post0
 s3transfer==0.10.1
+aiofiles==23.2.1

@@ -1,13 +1,12 @@
-from datetime import timedelta, datetime, timezone
 from typing import Annotated, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile, File
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from starlette import status 
 
-from pydantic import BaseModel
+import aiofiles
 
 import database
 import models
@@ -17,6 +16,8 @@ from models import User, Post, PostComment, PostLike
 import schemas
 from routers import auth
 
+import string
+import random
 import os
 
 from dotenv import load_dotenv
@@ -184,3 +185,29 @@ def delete_like(id: int, db: Session = Depends(get_db),
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
+
+@router.post('/{id}/upload-image')
+async def upload_image(id: int, db: Session = Depends(get_db), image: UploadFile = File(...),
+        current_user: int = Depends(auth.get_current_user)):
+    
+    post = db.query(Post).filter(Post.id == id).first()
+
+    if post == None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Post with id: {id} does not exist")
+    
+    content = image.read()
+
+    letters = string.ascii_letters
+
+    rand_str = ''.join(random.choice(letters) for i in range(8))
+    new = f'_{rand_str}.'
+
+    filename = new.join(image.filename.rsplit('.', 1))
+    
+    async with aiofiles.open(os.path.join('app/static/images', filename), mode='wb') as f:
+        await f.write(content)
+        
+    post.image_1 = filename    
+
+    return {'filename': post.image_1}

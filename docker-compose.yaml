@@ -29,5 +29,22 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
 
+
+  client:
+    build:
+      context: ./frontend
+    restart: on-failure
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - front-react  
+
+
+networks:
+  front-react:
+    driver: bridge
+
+
 volumes:
     mysqlvol:
